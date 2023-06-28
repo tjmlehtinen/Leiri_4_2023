@@ -9,12 +9,16 @@ public class PlayerController : MonoBehaviour
     private Animator animator;
     // input-muuttujat
     private float horizontalMovement;
+    private float verticalMovement;
     // liikkumismuuttujat
     private float moveSpeed = 5f;
     private Vector2 movement = new Vector2();
     // hyppimismuuttujat
     private float jumpForce = 10f;
     private bool grounded;
+    // kiipeämismuuttujat
+    private bool canClimb;
+    private bool isClimbing;
     // Start is called before the first frame update
     void Start()
     {
@@ -26,7 +30,26 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         horizontalMovement = Input.GetAxisRaw("Horizontal");
+        verticalMovement = Input.GetAxisRaw("Vertical");
         movement.x = horizontalMovement * moveSpeed;
+        if (canClimb && verticalMovement != 0)
+        {
+            isClimbing = true;
+        }
+        else
+        {
+            isClimbing = false;
+        }
+        if (isClimbing)
+        {
+            movement.y = verticalMovement * moveSpeed;
+            body.isKinematic = true;
+        }
+        else
+        {
+            movement.y = 0f;
+            body.isKinematic = false;
+        }
         if (Input.GetButtonDown("Jump") && grounded)
         {
             body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
@@ -43,12 +66,20 @@ public class PlayerController : MonoBehaviour
         {
             grounded = true;
         }
+        if (collision.gameObject.CompareTag("Ladder"))
+        {
+            canClimb = true;
+        }
     }
     void OnTriggerExit2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag("Platform"))
         {
             grounded = false;
+        }
+        if (collision.gameObject.CompareTag("Ladder"))
+        {
+            canClimb = false;
         }
     }
 }
