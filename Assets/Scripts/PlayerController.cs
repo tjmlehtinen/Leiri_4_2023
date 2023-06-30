@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -29,9 +30,21 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // inputit
         horizontalMovement = Input.GetAxisRaw("Horizontal");
         verticalMovement = Input.GetAxisRaw("Vertical");
+        // liike sivusuunnassa
         movement.x = horizontalMovement * moveSpeed;
+        // hahmon kääntäminen
+        if (horizontalMovement > 0)
+        {
+            transform.localScale = new Vector3(-1, 1, 1);
+        }
+        if (horizontalMovement < 0)
+        {
+            transform.localScale = new Vector3(1, 1, 1);
+        }
+        // kiipeäminen
         if (canClimb && verticalMovement != 0)
         {
             isClimbing = true;
@@ -50,15 +63,25 @@ public class PlayerController : MonoBehaviour
             movement.y = 0f;
             body.isKinematic = false;
         }
+        // hyppääminen
         if (Input.GetButtonDown("Jump") && grounded)
         {
             body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         }
+        // animaatio
         animator.SetFloat("speed", Mathf.Abs(horizontalMovement));
+        animator.SetBool("climbing", isClimbing);
     }
     void FixedUpdate()
     {
         transform.Translate(movement * Time.deltaTime);
+    }
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("Dragon"))
+        {
+            Win();
+        }
     }
     void OnTriggerStay2D(Collider2D collision)
     {
@@ -81,5 +104,26 @@ public class PlayerController : MonoBehaviour
         {
             canClimb = false;
         }
+    }
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("FireBall"))
+        {
+            Lose();
+        }
+    }
+    void RestartScene()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+    void Win()
+    {
+        Debug.Log("You win!");
+        RestartScene();
+    }
+    void Lose()
+    {
+        Debug.Log("You lose!");
+        RestartScene();
     }
 }
